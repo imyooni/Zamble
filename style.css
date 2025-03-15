@@ -1,0 +1,202 @@
+.hidden {
+    display: none;
+    z-index: -1;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #2F4F4F;
+    overflow: auto;
+    min-height: 100%;
+    cursor: url('./assets/Sprites/cursor.png'), auto;
+}
+
+html {
+    height: 100%;
+    overflow: auto;
+}
+
+
+@font-face {
+    font-family: 'DefaultFont';
+    src: url('./assets/Fonts/DefaultFont.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.gameBackground {
+    width: 100%;
+    height: 100%;
+    background: #2F4F4F;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    z-index: 0;
+}
+
+.flash-color {
+    animation: flashColor 0.2s 2;
+}
+
+@keyframes flashColor {
+    0% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(3);
+    }
+
+    /* Bright white flash */
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.logo {
+    position: absolute;
+    background-image: url('./assets/Sprites/logo.png');
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 362px;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    opacity: 0;
+}
+
+
+.twitchIcon {
+    position: absolute;
+    background-image: url('./assets/Sprites/twitchIcon.png');
+    top: 95%;
+    left: 90%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.youtubeIcon {
+    position: absolute;
+    background-image: url('./assets/Sprites/youtubeIcon.png');
+    top: 95%;
+    left: 75%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.gameLanguage {
+    position: absolute;
+    background-image: url('./assets/Sprites/ENG.png');
+    top: 95%;
+    left: 10%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.gameTitle {
+    position: absolute;
+    background-image: url('./assets/Sprites/gameTitle.png');
+    top: 18%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 170px;
+    height: 91px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+
+/* Styling for the .endDay-vocab container */
+.newGame-vocab {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+    width: 120px;
+    height: 32px;
+    background-color: #a37e18;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    opacity: 0;
+}
+
+.newGame-text {
+    color: rgb(116, 116, 116);
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.newGame-vocab:hover {
+    background-color: #ffde4c;
+}
+
+.newGame-vocab:hover .newGame-text {
+    color: white;
+}
+
+.secondary-background {
+    width: 364px;
+    height: 720px;
+    background: #5e5cb9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+    position: relative;
+}
