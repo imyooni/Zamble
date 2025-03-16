@@ -1,17 +1,14 @@
-.hidden {
-    display: none;
-    z-index: -1;
-}
+
 
 body {
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #2F4F4F;
+    background: #332a29;
     overflow: auto;
     min-height: 100%;
-    cursor: url('./assets/Sprites/cursor.png'), auto;
+    cursor: url('./assets/Sprites/system/cursor.png'), auto;
 }
 
 html {
@@ -30,7 +27,7 @@ html {
 .gameBackground {
     width: 100%;
     height: 100%;
-    background: #2F4F4F;
+    background: #52443c;
     display: flex !important;
     flex-direction: column;
     align-items: center;
@@ -38,6 +35,12 @@ html {
     position: absolute;
     z-index: 0;
 }
+
+.hidden {
+    display: none !important;
+    z-index: -1;
+}
+
 
 .flash-color {
     animation: flashColor 0.2s 2;
@@ -60,7 +63,7 @@ html {
 
 .logo {
     position: absolute;
-    background-image: url('./assets/Sprites/logo.png');
+    background-image: url('./assets/Sprites/system/logo.png');
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -78,7 +81,7 @@ html {
 
 .twitchIcon {
     position: absolute;
-    background-image: url('./assets/Sprites/twitchIcon.png');
+    background-image: url('./assets/Sprites/system/twitchIcon.png');
     top: 95%;
     left: 90%;
     transform: translate(-50%, -50%);
@@ -95,7 +98,7 @@ html {
 
 .youtubeIcon {
     position: absolute;
-    background-image: url('./assets/Sprites/youtubeIcon.png');
+    background-image: url('./assets/Sprites/system/youtubeIcon.png');
     top: 95%;
     left: 75%;
     transform: translate(-50%, -50%);
@@ -112,7 +115,7 @@ html {
 
 .gameLanguage {
     position: absolute;
-    background-image: url('./assets/Sprites/ENG.png');
+    background-image: url('./assets/Sprites/system/ENG.png');
     top: 95%;
     left: 10%;
     transform: translate(-50%, -50%);
@@ -129,7 +132,7 @@ html {
 
 .gameTitle {
     position: absolute;
-    background-image: url('./assets/Sprites/gameTitle.png');
+    background-image: url('./assets/Sprites/system/gameTitle.png');
     top: 18%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -192,11 +195,119 @@ html {
 .secondary-background {
     width: 364px;
     height: 720px;
-    background: #5e5cb9;
+    transform: translateX(50%) translateY(0%);
+    background: #6c584c;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border: 1px solid black;
     position: relative;
+}
+
+
+.slotGrid {
+    display: grid;
+    transform: translateX(40%) translateY(0%);
+    padding: 5px;
+    background-color: #696560;
+    border-radius: 5px;
+    border: 1px solid black;
+    margin-bottom: 15px;
+    grid-template-columns: repeat(7, 46px);
+    grid-template-rows: repeat(5, 56px);
+    gap: 4px;
+    width: 188px;
+    z-index: 3;
+    image-rendering: pixelated;
+}
+
+.slotItem {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: right;
+    text-align: right;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    z-index: 10;
+    pointer-events: none;
+    user-select: none;
+}
+
+
+.battleBorder {
+    position: relative;
+    transform: translateX(0%) translateY(-10%);
+    width: 317px;
+    height: 240px;
+    background-color: #2b2d42;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: left;
+    padding-left: 3px;
+    font-family: 'DefaultFont', sans-serif;
+    font-size: 16px;
+    z-index: 2;
+    border: 1px solid black;
+    border-radius: 10px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
+.parameters {
+    position: absolute;
+    left: 10px; /* Adjust based on your layout */
+    top: 40%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px; /* Adds spacing between items */
+}
+
+.parameter {
+    display: flex;
+    align-items: center;
+    transform: translateX(-7.2%) translateY(275%);
+    gap: 8px; /* Adds spacing between icon and text */
+    width: 140px;
+    height: 20px;
+    background-color: #2b2d42;
+    padding: 1px;
+    border: 1px solid black;
+    border-radius: 0px 10px 10px 0px;
+    font-family: 'DefaultFont', sans-serif;
+    font-size: 16px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    image-rendering: pixelated;
+}
+
+
+.param-name {
+    margin-left: -7px;  /* Space between name and icon */
+    color: white;
+}
+
+.param-icon {
+    width: 24px;  /* Set a fixed size for the icons */
+    height: 24px;
+}
+
+.stat-value {
+    color: #ffde4c;
+    flex-grow: 1;  /* Makes the value take available space */
+    padding-right: 4px;
+    text-align: right;  /* Aligns number to the right */
 }
