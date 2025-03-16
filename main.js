@@ -247,6 +247,7 @@ function updateNewGameText() {
 const systemsheets = {
     slotTypes: new Image(),
     heavyWeapons: new Image(),
+    lightArmors: new Image(),
     magicStaffs: new Image(),
     rarities: new Image(),
     systemIcons: new Image(),
@@ -291,12 +292,14 @@ function loadsystemSprites() {
             createSlots(index, slotType, null)
         }
 
-        updateInventory(0, ["magicStaffs", 0])
+        updateInventory(0, itemsData.heavyWeapons(1))
+        updateInventory(Math.floor(Math.random() * 24 + 1), itemsData.heavyWeapons(2))
+
 
         for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
             updateStats(key)
         }
-       // updateStats();
+       
     });
 }
 
@@ -307,8 +310,10 @@ function loadsystemSprites() {
 document.addEventListener('keydown', function (event) {
     if (event.key === "8") {
         for (let index = 0; index < 30; index++) {
-            updateInventory(index, ["magicStaffs", Math.floor(Math.random() * (16 * 4))])
+            if (index == 0) continue
+            clearSlotInventory(index)
         }
+        updateInventory(Math.floor(Math.random() * 24 + 1), itemsData.heavyWeapons(2))
     }
 });
 
@@ -338,7 +343,7 @@ function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
     }
     slotsTypes[index] = {
         element: cell, slotCanvas, slotCtx, itemCanvas, rarityCanvas, slotType,
-        itemID, rarityType, enabled: true
+        itemID, rarityType
     };
     slotsGrid.appendChild(cell);
     slotsGrid.classList.remove("hidden");
@@ -416,6 +421,157 @@ function updateSlotType(index, newSlotType) {
     slotData.slotType = newSlotType;
 }
 
+function clearSlotInventory(index) {
+    let slotData = slotsTypes[index];
+    if (!slotData) return; // If no data for the slot, return.
+
+    // Remove item canvas if it exists
+    if (slotData.itemCanvas) {
+        slotData.element.removeChild(slotData.itemCanvas);
+        slotData.itemCanvas = null; // Clear the reference
+    }
+
+    // Remove rarity canvas if it exists
+    if (slotData.rarityCanvas) {
+        slotData.element.removeChild(slotData.rarityCanvas);
+        slotData.rarityCanvas = null; // Clear the reference
+    }
+
+    // Reset the slot data for item and rarity
+    slotData.itemID = null;
+    slotData.rarityType = 0;
+
+    // Optionally, you can redraw the slot to reflect it as empty
+    drawSlotType(slotData.slotCtx, slotData.slotType); // This will keep the slot's original type
+}
+
+
+
+let selectedSlotIndex = null;
+document.addEventListener("click", function (event) {
+    let clickedItem = event.target.closest(".slotItem");
+    if (!clickedItem) return;
+    let inventoryItem = slotsTypes.find(item => item.element === clickedItem);
+    if (inventoryItem) {
+        if (selectedSlotIndex === inventoryItem) {
+            playAudio('/SFX/System_Selected_Piece.ogg');
+            clickedItem.classList.remove("selected-slot"); 
+            selectedSlotIndex = null; 
+            return;
+        }
+        if (selectedSlotIndex === null && !inventoryItem.itemID) {
+            return; 
+        }
+        if (selectedSlotIndex === null && inventoryItem.itemID) {
+            playAudio('/SFX/System_Selected_Piece.ogg');
+            selectedSlotIndex = inventoryItem;
+            clickedItem.classList.add("selected-slot"); 
+            return;
+        }
+       
+        if (!selectedSlotIndex.itemID[3]) {
+            playAudio('/SFX/System_Error.ogg');
+            return
+        } else if (inventoryItem.itemID !== null && !inventoryItem.itemID[3])  {
+            playAudio('/SFX/System_Error.ogg');
+            return
+        }
+        
+        if (!inventoryItem.itemID) {
+            
+            playAudio('/SFX/System_Selected_Piece.ogg');
+            moveItemToEmptySlot(selectedSlotIndex, inventoryItem);
+            selectedSlotIndex.element.classList.remove("selected-slot"); 
+            selectedSlotIndex = null; 
+        } else {
+            playAudio('/SFX/System_Selected_Piece.ogg');
+            swapItemsWithTransition(selectedSlotIndex, inventoryItem);
+            selectedSlotIndex.element.classList.remove("selected-slot"); 
+            selectedSlotIndex = null; 
+        }
+    }
+});
+
+function moveItemToEmptySlot(fromSlot, toSlot) {
+    if (!fromSlot || !toSlot || toSlot.itemID !== null) return;
+    if (fromSlot.itemCanvas) {
+        fromSlot.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+        fromSlot.itemCanvas.style.opacity = "0";
+    }
+    if (fromSlot.rarityCanvas) {
+        fromSlot.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+        fromSlot.rarityCanvas.style.opacity = "0";
+    }
+    setTimeout(() => {
+        toSlot.itemID = fromSlot.itemID;
+        toSlot.rarityType = fromSlot.rarityType;
+        toSlot.itemCanvas = createItemCanvas(fromSlot.itemID);
+        toSlot.rarityCanvas = createRarityCanvas(fromSlot.rarityType);
+        toSlot.element.appendChild(toSlot.itemCanvas);
+        toSlot.element.appendChild(toSlot.rarityCanvas);
+        fromSlot.itemID = null;
+        fromSlot.rarityType = 0;
+        if (fromSlot.itemCanvas) {
+            fromSlot.element.removeChild(fromSlot.itemCanvas);
+            fromSlot.itemCanvas = null;
+        }
+        if (fromSlot.rarityCanvas) {
+            fromSlot.element.removeChild(fromSlot.rarityCanvas);
+            fromSlot.rarityCanvas = null; 
+        }
+        redrawSlot(fromSlot);
+        redrawSlot(toSlot);
+        toSlot.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+        toSlot.itemCanvas.style.opacity = "1";
+        if (toSlot.rarityCanvas) {
+            toSlot.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+            toSlot.rarityCanvas.style.opacity = "1";
+        }
+    }, 200); 
+}
+
+function swapItemsWithTransition(slotA, slotB) {
+    if (!slotA || !slotB) return;
+    slotA.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+    slotB.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+    if (slotA.rarityCanvas) slotA.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+    if (slotB.rarityCanvas) slotB.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+    slotA.itemCanvas.style.opacity = "0";
+    slotB.itemCanvas.style.opacity = "0";
+    if (slotA.rarityCanvas) slotA.rarityCanvas.style.opacity = "0";
+    if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "0";
+    setTimeout(() => {
+        [slotA.itemID, slotB.itemID] = [slotB.itemID, slotA.itemID];
+        [slotA.rarityType, slotB.rarityType] = [slotB.rarityType, slotA.rarityType];
+        [slotA.itemCanvas, slotB.itemCanvas] = [slotB.itemCanvas, slotA.itemCanvas];
+        [slotA.rarityCanvas, slotB.rarityCanvas] = [slotB.rarityCanvas, slotA.rarityCanvas];
+        redrawSlot(slotA);
+        redrawSlot(slotB);
+        slotA.itemCanvas.style.opacity = "1";
+        slotB.itemCanvas.style.opacity = "1";
+        if (slotA.rarityCanvas) slotA.rarityCanvas.style.opacity = "1";
+        if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "1";
+    }, 200); 
+}
+
+function redrawSlot(slotData) {
+    if (!slotData) return;
+    if (slotData.itemCanvas && slotData.element.contains(slotData.itemCanvas)) {
+        slotData.element.removeChild(slotData.itemCanvas);
+    }
+    if (slotData.rarityCanvas && slotData.element.contains(slotData.rarityCanvas)) {
+        slotData.element.removeChild(slotData.rarityCanvas);
+    }
+    if (slotData.itemID) {
+        slotData.itemCanvas = createItemCanvas(slotData.itemID);
+        slotData.rarityCanvas = createRarityCanvas(slotData.rarityType);
+
+        slotData.element.appendChild(slotData.itemCanvas);
+        slotData.element.appendChild(slotData.rarityCanvas);
+    }
+}
+
+
 let parameters = {
     hp: { value: [100, 100], iconIndex: 0 },
     mp: { value: [50, 50], iconIndex: 1 },
@@ -423,35 +579,26 @@ let parameters = {
     def: { value: 10, iconIndex: 3 },
     luk: { value: 5, iconIndex: 7 }
 };
-
-
 const parametersContainer = document.querySelector(".parameters");
 function updateStats(param) {
-    if (!parameters[param]) return; // Ensure the param exists
-
+    if (!parameters[param]) return;
     let parameterElement = document.getElementById(param);
-
-    // If the element doesn't exist, create it
     if (!parameterElement) {
         parameterElement = document.createElement("div");
         parameterElement.classList.add("parameter");
         parameterElement.id = param;
-
         const iconCanvas = document.createElement("canvas");
         iconCanvas.width = 24;
         iconCanvas.height = 24;
         iconCanvas.classList.add("param-icon");
         parameterElement.appendChild(iconCanvas);
-
         const nameElement = document.createElement("span");
         nameElement.classList.add("param-name");
         nameElement.textContent = param.toUpperCase();
         parameterElement.appendChild(nameElement);
-
         const statValueElement = document.createElement("span");
         statValueElement.classList.add("stat-value");
         parameterElement.appendChild(statValueElement);
-
         parametersContainer.appendChild(parameterElement);
     }
 
@@ -483,24 +630,23 @@ function updateStats(param) {
     parametersContainer.classList.remove('hidden')
 }
 
-
-
-
 const battleBackCanvas = document.createElement("canvas");
-battleBackCanvas.width = 320;
-battleBackCanvas.height = 240;
-const ctx = battleBackCanvas.getContext("2d");
-document.body.appendChild(battleBackCanvas);
+const battleImageContainer = document.querySelector(".battleImage");
 function updateBattleback(newImage) {
-    battleBackCanvas.style.zIndex = "10"; // Make sure it's on top
-   // battleBackCanvas.style.transform = "translate(-107.2%, -63%)"
-    battleBackCanvas.style.transform = "translate(-50%, -63%)"
+    const ctx = battleBackCanvas.getContext("2d");
+    if (!battleImageContainer.contains(battleBackCanvas)) {
+        battleImageContainer.appendChild(battleBackCanvas);
+    }
+    battleBackCanvas.width = 320
+    battleBackCanvas.height = 240
     ctx.clearRect(0, 0, battleBackCanvas.width, battleBackCanvas.height);
     ctx.drawImage(newImage, 0, 0, battleBackCanvas.width, battleBackCanvas.height);
+    battleImageContainer.classList.remove('hidden')
 }
 function changeBattleback() {
-    updateBattleback(battleBackSheets.forest);  // Update with the new image
+    updateBattleback(battleBackSheets.forest);
 }
+
 
 
 

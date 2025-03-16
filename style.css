@@ -11,6 +11,7 @@ body {
     cursor: url('./assets/Sprites/system/cursor.png'), auto;
 }
 
+
 html {
     height: 100%;
     overflow: auto;
@@ -193,15 +194,15 @@ html {
 }
 
 .secondary-background {
-    width: 364px;
+    width: 366px;
     height: 720px;
-    transform: translateX(50%) translateY(0%);
     background: #6c584c;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border: 1px solid black;
+    border-radius: 5px;
     position: relative;
 }
 
@@ -232,8 +233,26 @@ html {
     box-sizing: border-box;
     image-rendering: pixelated;
     z-index: 10;
-    pointer-events: none;
-    user-select: none;
+}
+
+@keyframes selectedSlotAnim { 
+    0% {
+        border-color: #fc2600;
+    }
+    25% {
+        border-color: #ffffff;
+    }
+    50% {
+        border-color: #fc2600;
+    }
+    100% {
+        border-color: #ffffff;
+    }
+}
+
+.selected-slot {
+    border: 1px solid;
+    animation: selectedSlotAnim 1s infinite; /* 1s duration, infinite loop */
 }
 
 
@@ -262,6 +281,17 @@ html {
         -1px 1px 0px black;
 }
 
+.battleImage {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 200;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
 .parameters {
     position: absolute;
     left: 10px; /* Adjust based on your layout */
@@ -274,9 +304,9 @@ html {
 .parameter {
     display: flex;
     align-items: center;
-    transform: translateX(-7.2%) translateY(275%);
+    transform: translateX(-8.9%) translateY(275%);
     gap: 8px; /* Adds spacing between icon and text */
-    width: 140px;
+    width: 120px;
     height: 20px;
     background-color: #2b2d42;
     padding: 1px;
