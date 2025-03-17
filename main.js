@@ -12,6 +12,14 @@ document.addEventListener('contextmenu', (event) => {
 });
 
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+}
+
 let audioContext;
 let globalGainNode;
 const audioBuffers = new Map(); // Store loaded audio buffers
@@ -292,9 +300,11 @@ function loadsystemSprites() {
             createSlots(index, slotType, null)
         }
 
-        updateInventory(0, itemsData.heavyWeapons(1))
-        updateInventory(Math.floor(Math.random() * 24 + 1), itemsData.heavyWeapons(2))
-
+        updateInventory(0, itemsData.heavyWeapons(1), "heavyWeapons")
+        updateInventory(16, itemsData.heavyWeapons(10), "heavyWeapons")
+        updateInventory(5, itemsData.magicStaffs(1), "magicStaffs")
+        updateRarity(5,1)
+       
 
         for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
             updateStats(key)
@@ -309,13 +319,10 @@ function loadsystemSprites() {
 // █ refresh shop (testing)
 document.addEventListener('keydown', function (event) {
     if (event.key === "8") {
-        for (let index = 0; index < 30; index++) {
-            if (index == 0) continue
-            clearSlotInventory(index)
-        }
-        updateInventory(Math.floor(Math.random() * 24 + 1), itemsData.heavyWeapons(2))
+       shuffleItems()
     }
 });
+
 
 let slotsTypes = new Array(30).fill(null);
 const slotsGrid = document.querySelector(".slotGrid");
@@ -343,7 +350,7 @@ function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
     }
     slotsTypes[index] = {
         element: cell, slotCanvas, slotCtx, itemCanvas, rarityCanvas, slotType,
-        itemID, rarityType
+        itemID, enabled: true
     };
     slotsGrid.appendChild(cell);
     slotsGrid.classList.remove("hidden");
@@ -351,8 +358,8 @@ function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
 }
 
 function createItemCanvas(itemID) {
-    let spriteKey = systemsheets[itemID[0]];
-    let iconIndex = itemID[1];
+    let spriteKey = systemsheets[itemID.type];
+    let iconIndex = itemID.index-1;
     const itemCanvas = document.createElement("canvas");
     itemCanvas.width = 24;
     itemCanvas.height = 24;
@@ -382,17 +389,19 @@ function createRarityCanvas(rarityType) {
     return rarityCanvas;
 }
 
-function updateInventory(index, itemID) {
+function updateInventory(index, itemID, type) {
     let slotData = slotsTypes[index];
     if (!slotData) return;
     if (slotData.itemCanvas) {
         slotData.element.removeChild(slotData.itemCanvas);
     }
-    const newItemCanvas = createItemCanvas(itemID);
-    slotData.element.appendChild(newItemCanvas);
-    slotData.itemCanvas = newItemCanvas;
     slotData.itemID = itemID;
-    updateRarity(index, Math.floor(Math.random() * 4));
+    slotData.itemID.slotIndex = index
+    slotData.itemID.type = type
+    const newItemCanvas = createItemCanvas(itemID);
+    slotData.itemCanvas = newItemCanvas;
+    slotData.element.appendChild(newItemCanvas);
+    updateRarity(index, slotData.itemID.rarity);
 }
 
 function updateRarity(index, newRarityType) {
@@ -404,7 +413,7 @@ function updateRarity(index, newRarityType) {
     const newRarityCanvas = createRarityCanvas(newRarityType);
     slotData.element.appendChild(newRarityCanvas);
     slotData.rarityCanvas = newRarityCanvas;
-    slotData.rarityType = newRarityType;
+    slotData.itemID.rarity = newRarityType;
 }
 
 function drawSlotType(ctx, slotType) {
@@ -420,6 +429,51 @@ function updateSlotType(index, newSlotType) {
     drawSlotType(slotData.slotCtx, newSlotType);
     slotData.slotType = newSlotType;
 }
+
+
+function shuffleItems() {
+    let inventoryData = [];
+    let indexes = [];
+    for (let index = 0; index < slotsTypes.length; index++) {
+        const item = slotsTypes[index];
+        if (item.itemID !== null) {
+            if (item.itemID.movement !== "Fixed") {
+                item.enabled = false;
+                item.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+                item.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+                item.itemCanvas.style.opacity = "0";
+                item.rarityCanvas.style.opacity = "0";
+                inventoryData.push(item.itemID);
+                indexes.push(index);
+                slotsTypes[index].itemID = null
+            }
+        } else {
+            indexes.push(index);
+        }
+    }
+    let shuffledArray = shuffleArray(indexes);
+    setTimeout(() => {
+        for (let i = 0; i < inventoryData.length; i++) {
+            clearSlotInventory(indexes[i]);
+        }
+        setTimeout(() => {
+            for (let i = 0; i < inventoryData.length; i++) {
+                 if (inventoryData[i].slotIndex === shuffledArray[0]) {
+                    shuffledArray.shift(); 
+                }
+                const newIndex = shuffledArray.shift(); 
+                updateInventory(newIndex, inventoryData[i], inventoryData[i].type) ; 
+            }
+          for (let index = 0; index < slotsTypes.length; index++) {
+            slotsTypes[index].enabled = true
+          }  
+        }, 100); 
+    }, 200);
+}
+
+
+
+
 
 function clearSlotInventory(index) {
     let slotData = slotsTypes[index];
@@ -453,6 +507,7 @@ document.addEventListener("click", function (event) {
     if (!clickedItem) return;
     let inventoryItem = slotsTypes.find(item => item.element === clickedItem);
     if (inventoryItem) {
+        if (!inventoryItem.enabled) return
         if (selectedSlotIndex === inventoryItem) {
             playAudio('/SFX/System_Selected_Piece.ogg');
             clickedItem.classList.remove("selected-slot"); 
@@ -465,14 +520,15 @@ document.addEventListener("click", function (event) {
         if (selectedSlotIndex === null && inventoryItem.itemID) {
             playAudio('/SFX/System_Selected_Piece.ogg');
             selectedSlotIndex = inventoryItem;
+            console.log(inventoryItem.itemID)
             clickedItem.classList.add("selected-slot"); 
             return;
         }
-       
-        if (!selectedSlotIndex.itemID[3]) {
+        
+        if (selectedSlotIndex.itemID.movement === "Fixed") {
             playAudio('/SFX/System_Error.ogg');
             return
-        } else if (inventoryItem.itemID !== null && !inventoryItem.itemID[3])  {
+        } else if (inventoryItem.itemID !== null && inventoryItem.itemID.movement === "Fixed")  {
             playAudio('/SFX/System_Error.ogg');
             return
         }
@@ -504,13 +560,12 @@ function moveItemToEmptySlot(fromSlot, toSlot) {
     }
     setTimeout(() => {
         toSlot.itemID = fromSlot.itemID;
-        toSlot.rarityType = fromSlot.rarityType;
+        toSlot.itemID.slotIndex = slotsTypes.indexOf(toSlot)
         toSlot.itemCanvas = createItemCanvas(fromSlot.itemID);
         toSlot.rarityCanvas = createRarityCanvas(fromSlot.rarityType);
         toSlot.element.appendChild(toSlot.itemCanvas);
         toSlot.element.appendChild(toSlot.rarityCanvas);
         fromSlot.itemID = null;
-        fromSlot.rarityType = 0;
         if (fromSlot.itemCanvas) {
             fromSlot.element.removeChild(fromSlot.itemCanvas);
             fromSlot.itemCanvas = null;
@@ -542,9 +597,9 @@ function swapItemsWithTransition(slotA, slotB) {
     if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "0";
     setTimeout(() => {
         [slotA.itemID, slotB.itemID] = [slotB.itemID, slotA.itemID];
-        [slotA.rarityType, slotB.rarityType] = [slotB.rarityType, slotA.rarityType];
         [slotA.itemCanvas, slotB.itemCanvas] = [slotB.itemCanvas, slotA.itemCanvas];
         [slotA.rarityCanvas, slotB.rarityCanvas] = [slotB.rarityCanvas, slotA.rarityCanvas];
+        [slotA.itemID.slotIndex, slotB.itemID.slotIndex] = [slotB.itemID.slotIndex, slotA.itemID.slotIndex];
         redrawSlot(slotA);
         redrawSlot(slotB);
         slotA.itemCanvas.style.opacity = "1";
@@ -564,7 +619,7 @@ function redrawSlot(slotData) {
     }
     if (slotData.itemID) {
         slotData.itemCanvas = createItemCanvas(slotData.itemID);
-        slotData.rarityCanvas = createRarityCanvas(slotData.rarityType);
+        slotData.rarityCanvas = createRarityCanvas(slotData.itemID.rarity);
 
         slotData.element.appendChild(slotData.itemCanvas);
         slotData.element.appendChild(slotData.rarityCanvas);
