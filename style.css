@@ -194,8 +194,8 @@ html {
 }
 
 .secondary-background {
-    width: 366px;
-    height: 720px;
+    width: 376px;
+    height: 730px;
     background: #6c584c;
     display: flex;
     flex-direction: column;
@@ -208,7 +208,7 @@ html {
 
 .battleBorder {
     position: relative;
-    transform: translateX(0%) translateY(-60%);
+    transform: translateX(0%) translateY(-75%);
     width: 317px;
     height: 240px;
     background-color: #2b2d42;
@@ -246,7 +246,7 @@ html {
     position: absolute;
     display: grid;
   /*  transform: translateX(36%) translateY(-31%); */
-    transform: translateX(0%) translateY(60%); 
+    transform: translateX(0%) translateY(40%); 
     padding: 5px;
     background-color: #696560;
     border-radius: 5px;
@@ -311,7 +311,7 @@ html {
 .parameter {
     display: flex;
     align-items: center;
-    transform: translateX(0%) translateY(60%);
+    transform: translateX(0%) translateY(100%);
     gap: 8px; 
     width: 120px;
     height: 20px;

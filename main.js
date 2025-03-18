@@ -709,12 +709,12 @@ function moveItemToEmptySlot(fromSlot, toSlot) {
         }
         redrawSlot(fromSlot);
         redrawSlot(toSlot);
-        toSlot.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
-        toSlot.itemCanvas.style.opacity = "1";
-        if (toSlot.rarityCanvas) {
+        setTimeout(() => {
+            toSlot.itemCanvas.style.transition = "opacity 0.2s ease-in-out"
+            toSlot.itemCanvas.style.opacity = "1";
             toSlot.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
             toSlot.rarityCanvas.style.opacity = "1";
-        }
+        }, 10);
         fromSlot.enabled = true
         toSlot.enabled = true
     }, 200);
@@ -739,10 +739,16 @@ function swapItemsWithTransition(slotA, slotB) {
         [slotA.itemID.slotIndex, slotB.itemID.slotIndex] = [slotB.itemID.slotIndex, slotA.itemID.slotIndex];
         redrawSlot(slotA);
         redrawSlot(slotB);
-        slotA.itemCanvas.style.opacity = "1";
-        slotB.itemCanvas.style.opacity = "1";
-        if (slotA.rarityCanvas) slotA.rarityCanvas.style.opacity = "1";
-        if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "1";
+        setTimeout(() => {
+            slotA.itemCanvas.style.transition = "opacity 0.2s ease-in-out"
+            slotA.itemCanvas.style.opacity = "1";
+            slotA.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+            slotA.rarityCanvas.style.opacity = "1";
+            slotB.itemCanvas.style.transition = "opacity 0.2s ease-in-out"
+            slotB.itemCanvas.style.opacity = "1";
+            slotB.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+            slotB.rarityCanvas.style.opacity = "1";
+        }, 10);
         slotA.enabled = true
         slotB.enabled = true
     }, 200);
