@@ -206,59 +206,9 @@ html {
     position: relative;
 }
 
-
-.slotGrid {
-    display: grid;
-    transform: translateX(40%) translateY(0%);
-    padding: 5px;
-    background-color: #696560;
-    border-radius: 5px;
-    border: 1px solid black;
-    margin-bottom: 15px;
-    grid-template-columns: repeat(7, 46px);
-    grid-template-rows: repeat(5, 56px);
-    gap: 4px;
-    width: 188px;
-    z-index: 3;
-    image-rendering: pixelated;
-}
-
-.slotItem {
-    position: relative;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    justify-content: right;
-    text-align: right;
-    box-sizing: border-box;
-    image-rendering: pixelated;
-    z-index: 10;
-}
-
-@keyframes selectedSlotAnim { 
-    0% {
-        border-color: #fc2600;
-    }
-    25% {
-        border-color: #ffffff;
-    }
-    50% {
-        border-color: #fc2600;
-    }
-    100% {
-        border-color: #ffffff;
-    }
-}
-
-.selected-slot {
-    border: 1px solid;
-    animation: selectedSlotAnim 1s infinite; /* 1s duration, infinite loop */
-}
-
-
 .battleBorder {
     position: relative;
-    transform: translateX(0%) translateY(-10%);
+    transform: translateX(0%) translateY(-60%);
     width: 317px;
     height: 240px;
     background-color: #2b2d42;
@@ -292,8 +242,65 @@ html {
     user-select: none;
 }
 
+.slotGrid {
+    position: absolute;
+    display: grid;
+  /*  transform: translateX(36%) translateY(-31%); */
+    transform: translateX(0%) translateY(60%); 
+    padding: 5px;
+    background-color: #696560;
+    border-radius: 5px;
+    border: 1px solid black;
+    gap: 4px;
+    width: 317px;
+    z-index: 3;
+    image-rendering: pixelated;
+}
+
+.slotItem {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: right;
+    text-align: right;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    z-index: 10;
+    transition: opacity 0.5s ease-out; /* Remove transition on transform */
+    opacity: 0;
+}
+
+/* Define a CSS variable for the red color */
+:root {
+    --red-color: #fc2600; /* Default red color */
+}
+
+/* Keyframe animation using the dynamic color variable */
+@keyframes selectedSlotAnim {
+    0% {
+        border-color: var(--red-color);
+    }
+    25% {
+        border-color: #ffffff;
+    }
+    50% {
+        border-color: var(--red-color);
+    }
+    100% {
+        border-color: #ffffff;
+    }
+}
+
+.selected-slot {
+    box-shadow: 0 0 10px 2px var(--red-color); /* Use box-shadow to create a border-like effect */
+    animation: selectedSlotAnim 1s infinite; /* 1s duration, infinite loop */
+    box-sizing: border-box;
+}
+
 .parameters {
     position: absolute;
+    transform: translateX(-8.9%) translateY(160%);
     left: 10px; /* Adjust based on your layout */
     top: 40%;
     display: flex;
@@ -304,8 +311,8 @@ html {
 .parameter {
     display: flex;
     align-items: center;
-    transform: translateX(-8.9%) translateY(275%);
-    gap: 8px; /* Adds spacing between icon and text */
+    transform: translateX(0%) translateY(60%);
+    gap: 8px; 
     width: 120px;
     height: 20px;
     background-color: #2b2d42;
@@ -339,5 +346,52 @@ html {
     color: #ffde4c;
     flex-grow: 1;  /* Makes the value take available space */
     padding-right: 4px;
-    text-align: right;  /* Aligns number to the right */
+    text-align: left;  /* Aligns number to the right */
 }
+
+.tooltip {
+    position: absolute;
+    background-color: #2b2d42;
+    transform: translateX(33%) translateY(185%);
+    width: 200px;
+    height: 100px; /* Adjust height dynamically based on content */
+    padding: 5px 10px;
+    border: 1px solid black;
+    border-radius: 10px 0px 0px 10px;
+    font-family: 'DefaultFont', sans-serif;
+    font-size: 16px;
+    pointer-events: none;
+    user-select: none;
+    color: gold;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    display: flex;   /* Enables flexbox */
+    flex-direction: row;  /* Align items in a row */
+    align-items: top; /* Align items vertically */
+    gap: 8px; /* Space between icon and text */
+}
+
+.tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip canvas {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.tooltip-text {
+    font-size: 14px;
+    line-height: 24px; /* Ensures vertical alignment with the icon */
+}
+
+
+
+

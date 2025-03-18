@@ -5,6 +5,8 @@ import * as languageData from './assets/Scripts/languageData.js';
 
 let scene = 'intro';
 let language = 'eng';
+let columns = 8
+let rows = 3
 
 
 document.addEventListener('contextmenu', (event) => {
@@ -256,6 +258,7 @@ const systemsheets = {
     slotTypes: new Image(),
     heavyWeapons: new Image(),
     lightArmors: new Image(),
+    powerUps: new Image(),
     magicStaffs: new Image(),
     rarities: new Image(),
     systemIcons: new Image(),
@@ -290,26 +293,47 @@ function loadsystemSprites() {
     });
 
     Promise.all(spritePromises).then(() => {
-        for (let index = 0; index < 30; index++) {
+        for (let index = 0; index < (columns*rows); index++) {
             let slotType
             if (Math.random() < 0.75) {
                 slotType = 0
             } else {
-                slotType = 1
+                if (Math.random() < 0.75) {
+                    slotType = 1
+                } else {
+                    if (Math.random() < 0.75) {
+                        slotType = 2
+                    } else {
+                        slotType = 3
+                    }
+                }
+                
             }
             createSlots(index, slotType, null)
         }
 
-        updateInventory(0, itemsData.heavyWeapons(1), "heavyWeapons")
-        updateInventory(16, itemsData.heavyWeapons(10), "heavyWeapons")
-        updateInventory(5, itemsData.magicStaffs(1), "magicStaffs")
-        updateRarity(5,1)
-       
+        let items = [
+            [itemsData.heavyWeapons(1), "heavyWeapons", 0],
+            [itemsData.lightArmors(5), "lightArmors", 1],
+            [itemsData.powerUps(1), "powerUps", 0],
+            [itemsData.powerUps(1), "powerUps", 0],
+            [itemsData.powerUps(1), "powerUps", 0],
+            [itemsData.powerUps(1), "powerUps", 0],
+            [itemsData.powerUps(3), "powerUps", 0],
+            [itemsData.powerUps(3), "powerUps", 0],
+            [itemsData.powerUps(4), "powerUps", 0],
+            [itemsData.powerUps(4), "powerUps", 0],
+        ]
+        for (let index = 0; index < items.length; index++) {
+            addItem(items[index])
+        }
+
+
 
         for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
             updateStats(key)
         }
-       
+
     });
 }
 
@@ -319,18 +343,64 @@ function loadsystemSprites() {
 // █ refresh shop (testing)
 document.addEventListener('keydown', function (event) {
     if (event.key === "8") {
-       shuffleItems()
+
+        shuffleItems()
+        playAudio('/SFX/System_Selected.ogg');
     }
 });
 
+document.addEventListener('keydown', function (event) {
+    if (event.key === "9") {
 
-let slotsTypes = new Array(30).fill(null);
+        addItem([itemsData.powerUps(1), "powerUps", 0])
+        playAudio('/SFX/System_Selected.ogg');
+    }
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === "6") {
+
+        for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
+            updateStats(key)
+        }
+        playAudio('/SFX/System_Selected.ogg');
+    }
+});
+
+let slotsTypes = new Array((columns*rows)).fill(null);
 const slotsGrid = document.querySelector(".slotGrid");
 const battleBorder = document.querySelector(".battleBorder");
+
+function addItem(item) {
+    let size = slotsTypes.length;
+    let indexes = Array.from({ length: size }, (_, i) => i)
+        .filter(i => slotsTypes[i].itemID === null)
+        .sort(() => Math.random() - 0.5);
+    updateInventory(indexes[0], item[0], item[1])
+    updateRarity(indexes[0], item[2])
+    checkItemEffects(item[0])
+}
+
+function checkItemEffects(item) {
+    if (item.effects === null) return
+    for (const [key, value] of Object.entries(item.effects)) {
+        if (key === "paramUp") {
+            let mode
+            let randomValue = value[1]
+            value[1] = Math.floor(Math.random() * (randomValue[1] - randomValue[0] + 1)) + randomValue[0]
+            if (value[1] >= 0) {
+             mode = "up"
+            } else { mode = "down"}
+            changePlayerStats(value[0], value[1], "inventory", mode)
+        }
+    }
+}
+
 function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
-    slotsGrid.style.gridTemplateColumns = `repeat(5, 36px)`;
-    slotsGrid.style.gridTemplateRows = `repeat(6, 36px)`;
-    slotsGrid.style.gap = `2px`;
+
+    slotsGrid.style.gridTemplateColumns = `repeat(${columns}, 36px)`;
+    slotsGrid.style.gridTemplateRows = `repeat(${rows}, 36px)`;
+    slotsGrid.style.gap = `4px`;
     const cell = document.createElement("div");
     cell.classList.add("slotItem");
     cell.style.position = "relative";
@@ -355,11 +425,14 @@ function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
     slotsGrid.appendChild(cell);
     slotsGrid.classList.remove("hidden");
     battleBorder.classList.remove("hidden");
+    setTimeout(() => {
+        cell.style.opacity = "1";
+    }, 10);
 }
 
 function createItemCanvas(itemID) {
     let spriteKey = systemsheets[itemID.type];
-    let iconIndex = itemID.index-1;
+    let iconIndex = itemID.index - 1;
     const itemCanvas = document.createElement("canvas");
     itemCanvas.width = 24;
     itemCanvas.height = 24;
@@ -371,6 +444,11 @@ function createItemCanvas(itemID) {
     itemCanvas.style.left = "6px";
     itemCanvas.style.top = "6px";
     itemCanvas.style.zIndex = "10";
+    itemCanvas.style.opacity = "0";
+    itemCanvas.style.transition = "opacity 0.5s ease-out";
+    setTimeout(() => {
+        itemCanvas.style.opacity = "1";
+    }, 10);
     return itemCanvas;
 }
 
@@ -386,7 +464,26 @@ function createRarityCanvas(rarityType) {
     rarityCanvas.style.left = "5px";
     rarityCanvas.style.top = "6px";
     rarityCanvas.style.zIndex = "1";
+    rarityCanvas.style.opacity = "0";
+    rarityCanvas.style.transition = "opacity 0.5s ease-out";
+    setTimeout(() => {
+        rarityCanvas.style.opacity = "1";
+    }, 10);
     return rarityCanvas;
+}
+
+function drawSlotType(ctx, slotType) {
+    ctx.clearRect(0, 0, 36, 36);
+    let slotX = (slotType % 10) * 36;
+    let slotY = Math.floor(slotType / 10) * 36;
+    ctx.drawImage(systemsheets.slotTypes, slotX, slotY, 36, 36, 0, 0, 36, 36);
+}
+
+function updateSlotType(index, newSlotType) {
+    let slotData = slotsTypes[index];
+    if (!slotData) return;
+    drawSlotType(slotData.slotCtx, newSlotType);
+    slotData.slotType = newSlotType;
 }
 
 function updateInventory(index, itemID, type) {
@@ -416,65 +513,6 @@ function updateRarity(index, newRarityType) {
     slotData.itemID.rarity = newRarityType;
 }
 
-function drawSlotType(ctx, slotType) {
-    ctx.clearRect(0, 0, 36, 36);
-    let slotX = (slotType % 10) * 36;
-    let slotY = Math.floor(slotType / 10) * 36;
-    ctx.drawImage(systemsheets.slotTypes, slotX, slotY, 36, 36, 0, 0, 36, 36);
-}
-
-function updateSlotType(index, newSlotType) {
-    let slotData = slotsTypes[index];
-    if (!slotData) return;
-    drawSlotType(slotData.slotCtx, newSlotType);
-    slotData.slotType = newSlotType;
-}
-
-
-function shuffleItems() {
-    let inventoryData = [];
-    let indexes = [];
-    for (let index = 0; index < slotsTypes.length; index++) {
-        const item = slotsTypes[index];
-        if (item.itemID !== null) {
-            if (item.itemID.movement !== "Fixed") {
-                item.enabled = false;
-                item.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
-                item.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
-                item.itemCanvas.style.opacity = "0";
-                item.rarityCanvas.style.opacity = "0";
-                inventoryData.push(item.itemID);
-                indexes.push(index);
-                slotsTypes[index].itemID = null
-            }
-        } else {
-            indexes.push(index);
-        }
-    }
-    let shuffledArray = shuffleArray(indexes);
-    setTimeout(() => {
-        for (let i = 0; i < inventoryData.length; i++) {
-            clearSlotInventory(indexes[i]);
-        }
-        setTimeout(() => {
-            for (let i = 0; i < inventoryData.length; i++) {
-                 if (inventoryData[i].slotIndex === shuffledArray[0]) {
-                    shuffledArray.shift(); 
-                }
-                const newIndex = shuffledArray.shift(); 
-                updateInventory(newIndex, inventoryData[i], inventoryData[i].type) ; 
-            }
-          for (let index = 0; index < slotsTypes.length; index++) {
-            slotsTypes[index].enabled = true
-          }  
-        }, 100); 
-    }, 200);
-}
-
-
-
-
-
 function clearSlotInventory(index) {
     let slotData = slotsTypes[index];
     if (!slotData) return; // If no data for the slot, return.
@@ -499,54 +537,147 @@ function clearSlotInventory(index) {
     drawSlotType(slotData.slotCtx, slotData.slotType); // This will keep the slot's original type
 }
 
+function shuffleItems() {
+    let inventoryData = [];
+    let indexes = [];
+    for (let index = 0; index < slotsTypes.length; index++) {
+        const item = slotsTypes[index];
+        if (item.itemID !== null) {
+            if (item.itemID.movement === "Auto") {
+                item.enabled = false;
+                item.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
+                item.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
+                item.itemCanvas.style.opacity = "0";
+                item.rarityCanvas.style.opacity = "0";
+                inventoryData.push(item.itemID);
+                indexes.push(index);
+                slotsTypes[index].itemID = null
+            }
+        } else {
+            indexes.push(index);
+        }
+    }
+    let shuffledArray = shuffleArray(indexes);
+    setTimeout(() => {
+        for (let i = 0; i < inventoryData.length; i++) {
+            clearSlotInventory(indexes[i]);
+        }
+        setTimeout(() => {
+            for (let i = 0; i < inventoryData.length; i++) {
+                if (inventoryData[i].slotIndex === shuffledArray[0]) {
+                    shuffledArray.shift();
+                }
+                const newIndex = shuffledArray.shift();
+                updateInventory(newIndex, inventoryData[i], inventoryData[i].type);
+            }
+            for (let index = 0; index < slotsTypes.length; index++) {
+                slotsTypes[index].enabled = true
+            }
+        }, 100);
+    }, 200);
+}
 
 
 let selectedSlotIndex = null;
+const tooltip = document.createElement("div"); 
+tooltip.classList.add("tooltip");
+document.body.appendChild(tooltip);
+
 document.addEventListener("click", function (event) {
     let clickedItem = event.target.closest(".slotItem");
     if (!clickedItem) return;
+    
     let inventoryItem = slotsTypes.find(item => item.element === clickedItem);
+    
     if (inventoryItem) {
-        if (!inventoryItem.enabled) return
+        if (!inventoryItem.enabled) return;
+
         if (selectedSlotIndex === inventoryItem) {
-            playAudio('/SFX/System_Selected_Piece.ogg');
-            clickedItem.classList.remove("selected-slot"); 
-            selectedSlotIndex = null; 
+            playAudio('/SFX/System_Selected.ogg');
+            clickedItem.classList.remove("selected-slot");
+            selectedSlotIndex = null;
+            hideTooltip();
+            showHideSlots("show")
             return;
         }
+
         if (selectedSlotIndex === null && !inventoryItem.itemID) {
-            return; 
-        }
-        if (selectedSlotIndex === null && inventoryItem.itemID) {
-            playAudio('/SFX/System_Selected_Piece.ogg');
-            selectedSlotIndex = inventoryItem;
-            console.log(inventoryItem.itemID)
-            clickedItem.classList.add("selected-slot"); 
             return;
         }
-        
-        if (selectedSlotIndex.itemID.movement === "Fixed") {
-            playAudio('/SFX/System_Error.ogg');
-            return
-        } else if (inventoryItem.itemID !== null && inventoryItem.itemID.movement === "Fixed")  {
-            playAudio('/SFX/System_Error.ogg');
-            return
+
+        if (selectedSlotIndex === null && inventoryItem.itemID) {
+            playAudio('/SFX/System_Selected.ogg');
+            selectedSlotIndex = inventoryItem;
+            if (selectedSlotIndex.itemID.movement === "Fixed") {
+                clickedItem.style.setProperty('--red-color', "rgb(233, 27, 27)"); // Set dynamic red color
+            } else {
+                clickedItem.style.setProperty('--red-color', "rgb(161, 233, 27)"); // Set dynamic red color
+            }
+            clickedItem.classList.add("selected-slot");
+            showHideSlots("hide")
+            showTooltip(inventoryItem, clickedItem);
+            return;
         }
-        
+
+        if (selectedSlotIndex.itemID.movement === "Fixed" || 
+            (inventoryItem.itemID && inventoryItem.itemID.movement === "Fixed")) {
+            playAudio('/SFX/System_Error.ogg');
+            return;
+        }
+        showHideSlots("show") 
         if (!inventoryItem.itemID) {
-            
-            playAudio('/SFX/System_Selected_Piece.ogg');
+            playAudio('/SFX/System_Selected.ogg');
             moveItemToEmptySlot(selectedSlotIndex, inventoryItem);
-            selectedSlotIndex.element.classList.remove("selected-slot"); 
-            selectedSlotIndex = null; 
         } else {
-            playAudio('/SFX/System_Selected_Piece.ogg');
+            playAudio('/SFX/System_Selected.ogg');
             swapItemsWithTransition(selectedSlotIndex, inventoryItem);
-            selectedSlotIndex.element.classList.remove("selected-slot"); 
-            selectedSlotIndex = null; 
         }
+
+        selectedSlotIndex.element.classList.remove("selected-slot");
+        selectedSlotIndex = null;
+        hideTooltip();
     }
 });
+
+function showHideSlots(mode) {
+    for (let index = 0; index < slotsTypes.length; index++) {
+        const item = slotsTypes[index];
+       if (item === selectedSlotIndex) continue
+       if (item.itemID === null) continue
+       if (item.itemID.movement === "Fixed") {
+        item.element.style.transition = "opacity 0.1s ease-in-out";
+        if (mode === "hide") {
+            item.element.style.opacity = "0.5";
+        } else {
+            item.element.style.opacity = "1";
+        }
+       }               
+    }
+}
+
+
+function showTooltip(item, targetElement) {
+    tooltip.innerHTML = ""; // Clear previous content
+    let spriteKey = systemsheets[item.itemID.type];
+    let iconIndex = item.itemID.index - 1;
+    const itemCanvas = document.createElement("canvas");
+    itemCanvas.width = 24;
+    itemCanvas.height = 24;
+    const itemCtx = itemCanvas.getContext("2d");
+    let itemX = (iconIndex % 16) * 24;
+    let itemY = Math.floor(iconIndex / 16) * 24;
+    itemCtx.drawImage(spriteKey, itemX, itemY, 24, 24, 0, 0, 24, 24);
+    const itemText = document.createElement("span");
+    itemText.textContent = item.itemID.name;
+    itemText.classList.add("tooltip-text");
+    tooltip.appendChild(itemCanvas);
+    tooltip.appendChild(itemText);
+    tooltip.classList.add("visible");
+}
+
+function hideTooltip() {
+    tooltip.classList.remove("visible");
+}
 
 function moveItemToEmptySlot(fromSlot, toSlot) {
     if (!fromSlot || !toSlot || toSlot.itemID !== null) return;
@@ -558,6 +689,8 @@ function moveItemToEmptySlot(fromSlot, toSlot) {
         fromSlot.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
         fromSlot.rarityCanvas.style.opacity = "0";
     }
+    fromSlot.enabled = false
+    toSlot.enabled = false
     setTimeout(() => {
         toSlot.itemID = fromSlot.itemID;
         toSlot.itemID.slotIndex = slotsTypes.indexOf(toSlot)
@@ -572,7 +705,7 @@ function moveItemToEmptySlot(fromSlot, toSlot) {
         }
         if (fromSlot.rarityCanvas) {
             fromSlot.element.removeChild(fromSlot.rarityCanvas);
-            fromSlot.rarityCanvas = null; 
+            fromSlot.rarityCanvas = null;
         }
         redrawSlot(fromSlot);
         redrawSlot(toSlot);
@@ -582,7 +715,9 @@ function moveItemToEmptySlot(fromSlot, toSlot) {
             toSlot.rarityCanvas.style.transition = "opacity 0.2s ease-in-out";
             toSlot.rarityCanvas.style.opacity = "1";
         }
-    }, 200); 
+        fromSlot.enabled = true
+        toSlot.enabled = true
+    }, 200);
 }
 
 function swapItemsWithTransition(slotA, slotB) {
@@ -595,6 +730,8 @@ function swapItemsWithTransition(slotA, slotB) {
     slotB.itemCanvas.style.opacity = "0";
     if (slotA.rarityCanvas) slotA.rarityCanvas.style.opacity = "0";
     if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "0";
+    slotA.enabled = false
+    slotB.enabled = false
     setTimeout(() => {
         [slotA.itemID, slotB.itemID] = [slotB.itemID, slotA.itemID];
         [slotA.itemCanvas, slotB.itemCanvas] = [slotB.itemCanvas, slotA.itemCanvas];
@@ -606,7 +743,9 @@ function swapItemsWithTransition(slotA, slotB) {
         slotB.itemCanvas.style.opacity = "1";
         if (slotA.rarityCanvas) slotA.rarityCanvas.style.opacity = "1";
         if (slotB.rarityCanvas) slotB.rarityCanvas.style.opacity = "1";
-    }, 200); 
+        slotA.enabled = true
+        slotB.enabled = true
+    }, 200);
 }
 
 function redrawSlot(slotData) {
@@ -628,15 +767,69 @@ function redrawSlot(slotData) {
 
 
 let parameters = {
-    hp: { value: [100, 100], iconIndex: 0 },
-    mp: { value: [50, 50], iconIndex: 1 },
-    atk: { value: 20, iconIndex: 2 },
-    def: { value: 10, iconIndex: 3 },
-    luk: { value: 5, iconIndex: 7 }
+    hp: 75,
+    mp: 10,
+    atk: 5,
+    def: 5,
+    luk: 3
 };
+
+let inventoryParams = {
+    hp: 0,
+    mp: 0,
+    atk: 0,
+    def: 0,
+    luk: 0
+}
+
+let totalParams = {
+    hp: { value: [parameters.hp + inventoryParams.hp, parameters.hp + inventoryParams.hp], iconIndex: 0 },
+    mp: { value: [parameters.mp + inventoryParams.mp, parameters.mp + inventoryParams.mp], iconIndex: 1 },
+    atk: { value: parameters.atk + inventoryParams.atk, iconIndex: 2 },
+    def: { value: parameters.def + inventoryParams.def, iconIndex: 3 },
+    luk: { value: parameters.luk + inventoryParams.luk, iconIndex: 7 }
+}
+
+
+function changePlayerStats(index, amount, paramID, mode) {
+    let recovery = [false, false];
+    if (index === "hp" || index === "mp") {
+        if (totalParams[index].value[0] === totalParams[index].value[1]) {
+            if (index === "hp") {
+                recovery[0] = true;
+            } else if (index === "mp") {
+                recovery[1] = true;
+            }
+        }
+        if (recovery[0] || recovery[1]) {
+            totalParams[index].value[0] = totalParams[index].value[1];
+        }
+    }
+    if (paramID === "base") {
+        if (mode === "up") {
+            parameters[index] += amount;
+        } else {
+            parameters[index] -= amount;
+        }
+    } else {
+        if (mode === "up") {
+            inventoryParams[index] += amount;
+        } else {
+            inventoryParams[index] -= amount;
+        }
+    }
+    totalParams[index].value =
+        index === "hp" || index === "mp"
+            ? [parameters[index] + inventoryParams[index], parameters[index] + inventoryParams[index]]
+            : parameters[index] + inventoryParams[index];
+    updateStats(index);
+}
+
+
 const parametersContainer = document.querySelector(".parameters");
+const statOrder = ["hp", "mp", "atk", "def", "luk"];
 function updateStats(param) {
-    if (!parameters[param]) return;
+    if (!totalParams[param]) return;
     let parameterElement = document.getElementById(param);
     if (!parameterElement) {
         parameterElement = document.createElement("div");
@@ -647,43 +840,38 @@ function updateStats(param) {
         iconCanvas.height = 24;
         iconCanvas.classList.add("param-icon");
         parameterElement.appendChild(iconCanvas);
-        const nameElement = document.createElement("span");
-        nameElement.classList.add("param-name");
-        nameElement.textContent = param.toUpperCase();
-        parameterElement.appendChild(nameElement);
         const statValueElement = document.createElement("span");
         statValueElement.classList.add("stat-value");
         parameterElement.appendChild(statValueElement);
         parametersContainer.appendChild(parameterElement);
     }
-
-    const { value, iconIndex } = parameters[param];
+    const { value, iconIndex } = totalParams[param];
     const statValueElement = parameterElement.querySelector(".stat-value");
     const iconCanvas = parameterElement.querySelector(".param-icon");
     const ctx = iconCanvas.getContext("2d");
-
-    // Update the icon
     const iconX = (iconIndex % 16) * 24;
     const iconY = Math.floor(iconIndex / 16) * 24;
     ctx.clearRect(0, 0, 24, 24);
     ctx.drawImage(systemsheets.systemIcons, iconX, iconY, 24, 24, 0, 0, 24, 24);
-
-    // Update the value with colors
     let statsValue;
-    if (param === "hp") {
-        statsValue = value[0];
-        statValueElement.style.color = "rgb(171, 233, 2)";
-    } else if (param === "mp") {
-        statsValue = value[0];
-        statValueElement.style.color = "rgb(2, 225, 233)";
+    if (param === "hp" || param === "mp") {
+        statsValue = `${value[0]}/${value[1]}`;
+        statValueElement.style.color = param === "hp" ? "rgb(171, 233, 2)" : "rgb(2, 225, 233)";
     } else {
         statsValue = value;
-        statValueElement.style.color = "#ffde4c"; // Default color
+        statValueElement.style.color = "#ffde4c";
     }
     statValueElement.textContent = statsValue;
-
     parametersContainer.classList.remove('hidden')
+    sortStats();
 }
+
+function sortStats() {
+    const elements = Array.from(parametersContainer.children);
+    elements.sort((a, b) => statOrder.indexOf(a.id) - statOrder.indexOf(b.id));
+    elements.forEach(element => parametersContainer.appendChild(element));
+}
+
 
 const battleBackCanvas = document.createElement("canvas");
 const battleImageContainer = document.querySelector(".battleImage");
