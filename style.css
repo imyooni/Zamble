@@ -208,21 +208,76 @@ html {
 
 .battleBorder {
     position: relative;
-    transform: translateX(0%) translateY(-75%);
-    width: 317px;
-    height: 240px;
-    background-color: #2b2d42;
+    transform: translateX(0%) translateY(-68%);
+    background-image: url('./assets/Sprites/system/sceneBorder.png');
+    width: 320px;
+    height: 275px;
     display: flex;
     flex-direction: column;
     justify-content: left;
     align-items: left;
-    padding-left: 3px;
-    font-family: 'DefaultFont', sans-serif;
-    font-size: 16px;
     z-index: 2;
-    border: 1px solid black;
-    border-radius: 10px;
     pointer-events: none;
+    user-select: none;
+    image-rendering: pixelated;
+}
+
+.battleImage {
+    position: absolute;
+    top: 43px;
+    left: 8px;
+    z-index: 200;
+    width: 303px;
+    height: 223px;
+    pointer-events: none;
+    user-select: none;
+    image-rendering: pixelated;
+}
+
+.slotGrid {
+    position: absolute;
+    display: grid;
+  /*  transform: translateX(36%) translateY(-31%); */
+    background-image: url('./assets/Sprites/system/inventoryBorder.png');
+    transform: translateX(0%) translateY(61%); 
+    gap: 4px;
+    width: 337px;
+    height: 141px;
+    z-index: 3;
+    image-rendering: pixelated;
+}
+
+.slotItem {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    box-sizing: border-box;
+    scale: 1.0;
+    z-index: 10;
+    transition: opacity 0.5s ease-out; /* Remove transition on transform */
+    opacity: 0;
+    image-rendering: pixelated;
+}
+
+
+
+.endTurnBorder {
+    position: absolute;
+    transform: translateX(100%) translateY(-10%);
+    background-image: url('./assets/Sprites/system/endTurnBorder.png');
+    color: #ffffff;
+    width: 91px;
+    height: 41px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 14px;
+    z-index: 100;
     user-select: none;
     text-shadow:
         1px 1px 0px black,
@@ -231,44 +286,11 @@ html {
         -1px 1px 0px black;
 }
 
-.battleImage {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 200;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    user-select: none;
-}
-
-.slotGrid {
-    position: absolute;
-    display: grid;
-  /*  transform: translateX(36%) translateY(-31%); */
-    transform: translateX(0%) translateY(40%); 
-    padding: 5px;
-    background-color: #696560;
-    border-radius: 5px;
-    border: 1px solid black;
-    gap: 4px;
-    width: 317px;
-    z-index: 3;
-    image-rendering: pixelated;
-}
-
-.slotItem {
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    justify-content: right;
-    text-align: right;
-    box-sizing: border-box;
-    image-rendering: pixelated;
-    z-index: 10;
-    transition: opacity 0.5s ease-out; /* Remove transition on transform */
-    opacity: 0;
+.endTurnText {
+    color: white;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
 }
 
 /* Define a CSS variable for the red color */
@@ -352,7 +374,7 @@ html {
 .tooltip {
     position: absolute;
     background-color: #2b2d42;
-    transform: translateX(33%) translateY(185%);
+    transform: translateX(37.3%) translateY(200%);
     width: 200px;
     height: 100px; /* Adjust height dynamically based on content */
     padding: 5px 10px;

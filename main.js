@@ -310,7 +310,17 @@ function loadsystemSprites() {
                 
             }
             createSlots(index, slotType, null)
+
+            
         }
+
+        slotsGrid.classList.remove("hidden");
+        battleBorder.classList.remove("hidden");
+        endTurnborder.classList.remove('hidden')
+        const endTurnborderText = document.createElement('div');
+        endTurnborderText.classList.add('endTurnborderText');
+        endTurnborderText.textContent = "End Turn";
+        endTurnborder.appendChild(endTurnborderText);
 
         let items = [
             [itemsData.heavyWeapons(1), "heavyWeapons", 0],
@@ -327,7 +337,8 @@ function loadsystemSprites() {
         for (let index = 0; index < items.length; index++) {
             addItem(items[index])
         }
-
+        
+        
 
 
         for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
@@ -423,8 +434,6 @@ function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
         itemID, enabled: true
     };
     slotsGrid.appendChild(cell);
-    slotsGrid.classList.remove("hidden");
-    battleBorder.classList.remove("hidden");
     setTimeout(() => {
         cell.style.opacity = "1";
     }, 10);
@@ -573,8 +582,9 @@ function shuffleItems() {
             for (let index = 0; index < slotsTypes.length; index++) {
                 slotsTypes[index].enabled = true
             }
+            endTurnState = true 
         }, 100);
-    }, 200);
+   }, 200);
 }
 
 
@@ -868,7 +878,7 @@ function updateStats(param) {
         statValueElement.style.color = "#ffde4c";
     }
     statValueElement.textContent = statsValue;
-    parametersContainer.classList.remove('hidden')
+ //   parametersContainer.classList.remove('hidden')
     sortStats();
 }
 
@@ -886,8 +896,8 @@ function updateBattleback(newImage) {
     if (!battleImageContainer.contains(battleBackCanvas)) {
         battleImageContainer.appendChild(battleBackCanvas);
     }
-    battleBackCanvas.width = 320
-    battleBackCanvas.height = 240
+    battleBackCanvas.width = 303
+    battleBackCanvas.height = 223
     ctx.clearRect(0, 0, battleBackCanvas.width, battleBackCanvas.height);
     ctx.drawImage(newImage, 0, 0, battleBackCanvas.width, battleBackCanvas.height);
     battleImageContainer.classList.remove('hidden')
@@ -896,8 +906,17 @@ function changeBattleback() {
     updateBattleback(battleBackSheets.forest);
 }
 
-
-
+let endTurnState = true
+const endTurnborder = document.querySelector(".endTurnBorder");
+document.addEventListener("click", function (event) {
+    if (!endTurnState) return
+    let clickedItem = event.target.closest(".endTurnBorder");
+    if (!clickedItem) return;
+    endTurnState = false
+    shuffleItems()
+    playAudio('/SFX/System_Selected.ogg');
+   
+});
 
 
 
