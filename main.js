@@ -2,12 +2,13 @@
 
 import * as itemsData from './assets/Scripts/itemsData.js';
 import * as languageData from './assets/Scripts/languageData.js';
+import * as gameData from './assets/Scripts/gameData.js';
 
 let scene = 'intro';
 let language = 'eng';
 let columns = 8
 let rows = 3
-
+let rarityColors = ["rgb(115, 115, 115)","rgb(124, 187, 214)","rgb(243, 157, 119)","rgb(165, 179, 124)"]
 
 document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
@@ -256,6 +257,7 @@ function updateNewGameText() {
 
 const systemsheets = {
     slotTypes: new Image(),
+    items: new Image(),
     heavyWeapons: new Image(),
     lightArmors: new Image(),
     powerUps: new Image(),
@@ -309,6 +311,7 @@ function loadsystemSprites() {
                 }
                 
             }
+            slotType = 0
             createSlots(index, slotType, null)
 
             
@@ -317,23 +320,19 @@ function loadsystemSprites() {
         slotsGrid.classList.remove("hidden");
         battleBorder.classList.remove("hidden");
         endTurnborder.classList.remove('hidden')
+        parametersContainer.classList.remove('hidden')
         const endTurnborderText = document.createElement('div');
         endTurnborderText.classList.add('endTurnborderText');
         endTurnborderText.textContent = "End Turn";
         endTurnborder.appendChild(endTurnborderText);
 
         let items = [
-            [itemsData.heavyWeapons(1), "heavyWeapons", 0],
-            [itemsData.lightArmors(5), "lightArmors", 1],
-            [itemsData.powerUps(1), "powerUps", 0],
-            [itemsData.powerUps(1), "powerUps", 0],
-            [itemsData.powerUps(1), "powerUps", 0],
-            [itemsData.powerUps(1), "powerUps", 0],
-            [itemsData.powerUps(3), "powerUps", 0],
-            [itemsData.powerUps(3), "powerUps", 0],
-            [itemsData.powerUps(4), "powerUps", 0],
-            [itemsData.powerUps(4), "powerUps", 0],
+            [itemsData.items(1), "items", 0],
+            [itemsData.heavyWeapons(2), "heavyWeapons", Math.floor(Math.random() * 4)],
+            [itemsData.lightArmors(1), "lightArmors", Math.floor(Math.random() * 4)],
+            [itemsData.lightArmors(3), "lightArmors", Math.floor(Math.random() * 4)],
         ]
+        items[0][0].coins[0] = 50
         for (let index = 0; index < items.length; index++) {
             addItem(items[index])
         }
@@ -344,6 +343,7 @@ function loadsystemSprites() {
         for (const [key, { value, iconIndex }] of Object.entries(parameters)) {
             updateStats(key)
         }
+        //playBGM("bgm005.ogg",0.5)
 
     });
 }
@@ -354,9 +354,7 @@ function loadsystemSprites() {
 // █ refresh shop (testing)
 document.addEventListener('keydown', function (event) {
     if (event.key === "8") {
-
         shuffleItems()
-        playAudio('/SFX/System_Selected.ogg');
     }
 });
 
@@ -389,22 +387,21 @@ function addItem(item) {
         .sort(() => Math.random() - 0.5);
     updateInventory(indexes[0], item[0], item[1])
     updateRarity(indexes[0], item[2])
-    checkItemEffects(item[0])
+    checkItemParams(item[0])
 }
 
-function checkItemEffects(item) {
-    if (item.effects === null) return
-    for (const [key, value] of Object.entries(item.effects)) {
-        if (key === "paramUp") {
-            let mode
-            let randomValue = value[1]
-            value[1] = Math.floor(Math.random() * (randomValue[1] - randomValue[0] + 1)) + randomValue[0]
-            if (value[1] >= 0) {
-             mode = "up"
-            } else { mode = "down"}
-            changePlayerStats(value[0], value[1], "inventory", mode)
-        }
-    }
+function checkItemParams(item) {
+    if (item.params.length === 0) return
+      for (let index = 0; index < item.params.length; index++) {
+        const param = item.params[index];
+        let mode
+        let randomValue = param[1]
+        param[1] = Math.floor(Math.random() * (randomValue[1] - randomValue[0] + 1)) + randomValue[0]
+        if (param[1] >= 0) {
+            mode = "up"
+        } else { mode = "down"}
+        changePlayerStats(param[0], param[1], "inventory", mode)
+      }
 }
 
 function createSlots(index, slotType = 0, itemID = null, rarityType = 0) {
@@ -547,11 +544,20 @@ function clearSlotInventory(index) {
 }
 
 function shuffleItems() {
+    playAudio('/SFX/System_Items_Changed.ogg')
+    if (selectedSlotIndex) {
+        let item = slotsTypes[slotsTypes.indexOf(selectedSlotIndex)]
+        item.element.classList.remove("selected-slot")
+        selectedSlotIndex = null;
+        hideTooltip();
+        showHideSlots("show")
+    }
     let inventoryData = [];
     let indexes = [];
     for (let index = 0; index < slotsTypes.length; index++) {
         const item = slotsTypes[index];
         if (item.itemID !== null) {
+            if (item.slotType === 1) continue
             if (item.itemID.movement === "Auto") {
                 item.enabled = false;
                 item.itemCanvas.style.transition = "opacity 0.2s ease-in-out";
@@ -603,7 +609,11 @@ document.addEventListener("click", function (event) {
         if (!inventoryItem.enabled) return;
 
         if (selectedSlotIndex === inventoryItem) {
-            playAudio('/SFX/System_Selected.ogg');
+            if (!tooltip.classList.contains("visible")) {
+                showTooltip(inventoryItem, clickedItem)
+                return 
+            }
+            playAudio('/SFX/System_Cancel.ogg'); 
             clickedItem.classList.remove("selected-slot");
             selectedSlotIndex = null;
             hideTooltip();
@@ -636,10 +646,10 @@ document.addEventListener("click", function (event) {
         }
         showHideSlots("show") 
         if (!inventoryItem.itemID) {
-            playAudio('/SFX/System_Selected.ogg');
+            playAudio('/SFX/System_Items_Changed.ogg');
             moveItemToEmptySlot(selectedSlotIndex, inventoryItem);
         } else {
-            playAudio('/SFX/System_Selected.ogg');
+            playAudio('/SFX/System_Items_Changed.ogg');
             swapItemsWithTransition(selectedSlotIndex, inventoryItem);
         }
 
@@ -665,29 +675,257 @@ function showHideSlots(mode) {
     }
 }
 
-
-function showTooltip(item, targetElement) {
-    tooltip.innerHTML = ""; // Clear previous content
-    let spriteKey = systemsheets[item.itemID.type];
-    let iconIndex = item.itemID.index - 1;
+function itemDescParams(element,spriteKey,iconIndex,id,value,param) {
     const itemCanvas = document.createElement("canvas");
+    itemCanvas.dataset.help = gameData.params(param).desc
     itemCanvas.width = 24;
     itemCanvas.height = 24;
+    itemCanvas.style.position = "absolute";
+    itemCanvas.style.left = `${12+(32*id)}px`; 
+    itemCanvas.style.bottom = "2px"; 
     const itemCtx = itemCanvas.getContext("2d");
     let itemX = (iconIndex % 16) * 24;
     let itemY = Math.floor(iconIndex / 16) * 24;
     itemCtx.drawImage(spriteKey, itemX, itemY, 24, 24, 0, 0, 24, 24);
+    element.appendChild(itemCanvas); 
+    const paramValue = document.createElement("span");
+    paramValue.textContent = value;
+    paramValue.style.position = "absolute";
+    paramValue.style.left = `${12+(32*id)}px`; 
+    if (value >= 0) {
+       paramValue.style.color = "rgb(0,255,0)";
+    } else {
+       paramValue.style.color = "rgb(255,0,0)";
+    }
+    paramValue.style.bottom = "-15px"; 
+    paramValue.classList.add("tooltip-paramValue");
+    element.appendChild(paramValue);
+}
+
+function itemDescCoins(element,value) { 
+    const paramValue = document.createElement("span");
+    paramValue.textContent = `${value[0]}/${value[1]}`;
+    paramValue.style.position = "absolute";
+    paramValue.style.left = `15px`; 
+    paramValue.style.color = "rgb(255, 230, 0)";
+    paramValue.style.width = "180px"
+    paramValue.style.bottom = "-15px"; 
+    paramValue.classList.add("tooltip-paramValue");
+    element.appendChild(paramValue);
+}
+
+function itemDescRarity(element,spriteKey,iconIndex,rarity) {
+    const itemCanvas = document.createElement("canvas");
+    itemCanvas.dataset.help = gameData.rarity(rarity).desc
+    itemCanvas.width = 24;
+    itemCanvas.height = 24;
+    itemCanvas.style.position = "absolute";
+    itemCanvas.style.right = `5px`; 
+    itemCanvas.style.top = "-16px"; 
+    const itemCtx = itemCanvas.getContext("2d");
+    let itemX = (iconIndex % 16) * 24;
+    let itemY = Math.floor(iconIndex / 16) * 24;
+    itemCtx.drawImage(spriteKey, itemX, itemY, 24, 24, 0, 0, 24, 24);
+    element.appendChild(itemCanvas); 
+}
+
+function itemDescMovement(element,spriteKey,iconIndex,movement) {
+    const itemCanvas = document.createElement("canvas");
+    itemCanvas.dataset.help = gameData.movement(movement.toLowerCase()).desc
+    itemCanvas.width = 24;
+    itemCanvas.height = 24;
+    itemCanvas.style.position = "absolute";
+    itemCanvas.style.right = `32px`; 
+    itemCanvas.style.top = "-16px"; 
+    const itemCtx = itemCanvas.getContext("2d");
+    let itemX = (iconIndex % 16) * 24;
+    let itemY = Math.floor(iconIndex / 16) * 24;
+    itemCtx.drawImage(spriteKey, itemX, itemY, 24, 24, 0, 0, 24, 24);
+    element.appendChild(itemCanvas); 
+}
+
+function itemIcon(element,spriteKey,iconIndex) {
+    const itemCanvas = document.createElement("canvas");
+    itemCanvas.width = 24;
+    itemCanvas.height = 24;
+    itemCanvas.style.backgroundColor = "rgb(80, 80, 80)"
+    itemCanvas.style.border = "1px solid black";
+    itemCanvas.style.borderRadius = "5px"
+    itemCanvas.style.position = "absolute";
+    itemCanvas.style.left = `5px`; 
+    itemCanvas.style.top = "7px"; 
+    const itemCtx = itemCanvas.getContext("2d");
+    let itemX = (iconIndex % 16) * 24;
+    let itemY = Math.floor(iconIndex / 16) * 24;
+    itemCtx.drawImage(spriteKey, itemX, itemY, 24, 24, 0, 0, 24, 24);
+    element.appendChild(itemCanvas); 
+}
+
+
+function closeButton(element,action, x, y) {
+    if (element.closeButtonIcon) return
+    let imageSrc = `./assets/Sprites/system/closeButton.png`;
+    const itemCanvas = document.createElement("canvas");
+    itemCanvas.dataset.closeButton = `${action}`; 
+    itemCanvas.dataset.container = element
+    itemCanvas.width = 17;
+    itemCanvas.height = 17;
+    itemCanvas.style.position = "absolute";
+    itemCanvas.style.left = `${x}px`; 
+    itemCanvas.style.top = `${y}px`; 
+    const itemCtx = itemCanvas.getContext("2d");
+    let img = new Image();
+    img.src = imageSrc;
+    img.onload = function() {
+        itemCtx.drawImage(img, 0, 0, 17, 17);
+    };
+    element.appendChild(itemCanvas);
+    element.closeButtonIcon = true
+}
+
+
+function showTooltip(item, targetElement) {
+    tooltip.innerHTML = ""; // Clear previous content
+
+
+
+    
     const itemText = document.createElement("span");
     itemText.textContent = item.itemID.name;
     itemText.classList.add("tooltip-text");
-    tooltip.appendChild(itemCanvas);
+    
+ 
     tooltip.appendChild(itemText);
+    
+
+    // item icon 
+   
+    itemIcon(tooltip,systemsheets[item.itemID.type],item.itemID.index-1)
+    // Set background color based on rarity
+    tooltip.style.backgroundColor = rarityColors[item.itemID.rarity];
+    
+    // Add rarity icon
+    itemDescRarity(tooltip, systemsheets["systemIcons"], 7 + item.itemID.rarity, item.itemID.rarity);
+    
+    // Add coins info if available
+    if (item.itemID.coins !== undefined) {
+        itemDescCoins(tooltip, item.itemID.coins);
+    }
+    
+    // Add movement info
+    let movements = ["Fixed", "Auto", "Manual"];
+    itemDescMovement(tooltip, systemsheets["systemIcons"], 16 + movements.indexOf(item.itemID.movement), item.itemID.movement);
+    
+    // Add params if available
+    if (item.itemID.params.length > 0) {
+        for (let index = 0; index < item.itemID.params.length; index++) {
+            const par = item.itemID.params[index];
+            let icon = statOrder.indexOf(par[0]);
+            itemDescParams(tooltip, systemsheets["systemIcons"], icon, index, par[1], par[0]);
+        }
+    }
+    
+    // Make the tooltip visible
     tooltip.classList.add("visible");
+    
+    // Add close button to tooltipe
+    closeButton(tooltip, "hideTooltip", 2, -12);
 }
 
-function hideTooltip() {
-    tooltip.classList.remove("visible");
+
+let oldeffect = null
+const Effectstooltip = document.createElement("div"); 
+Effectstooltip.classList.add("effects-tooltip");
+document.body.appendChild(Effectstooltip);
+document.addEventListener("DOMContentLoaded", function () {
+    const tooltipEffects = document.querySelector(".tooltip");
+    if (!tooltipEffects) {
+        console.warn("Tooltip not found!");
+        return;
+    }
+    tooltipEffects.addEventListener("click", function (event) {
+        if (event.target.tagName.toLowerCase() === "canvas") {
+          if (event.target.dataset.help) {
+           if (oldeffect === event.target.dataset.help) {
+            return
+           }
+           playAudio('/SFX/System_Effects_Help.ogg'); 
+           let text = event.target.dataset.help
+           oldeffect = text
+           showEffectsTooltip(text)
+          }  
+        }
+    });
+});
+
+function showEffectsTooltip(text) {
+    disposeSprites(Effectstooltip, "closeButton"); 
+    const itemText = document.createElement("span");
+    itemText.textContent = text;
+    Effectstooltip.style.position = "fixed"
+    itemText.classList.add("effects-tooltip-text");
+    Effectstooltip.appendChild(itemText);
+    Effectstooltip.classList.add("visible"); 
+    closeButton(Effectstooltip,"hideffectsTooltip",2,-12) 
 }
+
+
+window.hideffectsTooltip = function() {
+    if (oldeffect === null) return
+    oldeffect = null;
+    Effectstooltip.innerHTML = "";
+    Effectstooltip.classList.remove("visible");
+    Effectstooltip.addEventListener("transitionend", function (event) {
+        if (event.propertyName === "opacity" && !Effectstooltip.classList.contains("visible")) {
+            Effectstooltip.innerHTML = "";
+        }
+    }, { once: true });
+};
+
+window.hideTooltip = function(){
+    hideffectsTooltip()
+    tooltip.classList.remove("visible");
+    tooltip.addEventListener("transitionend", function (event) {
+        if (event.propertyName === "opacity" && !tooltip.classList.contains("visible")) {
+            tooltip.innerHTML = "";
+        }
+    }, { once: true });
+}
+
+
+document.addEventListener("click", function (event) {
+    if (event.target.tagName.toLowerCase() === "canvas" && event.target.dataset.closeButton) {
+        let functionName = event.target.dataset.closeButton; // Get stored function name
+        if (typeof window[functionName] === "function") {
+         
+            playAudio('/SFX/System_Cancel.ogg')  
+            window[functionName]();
+            event.target.dataset.container.closeButtonIcon = null
+            event.target.dataset.closeButton = null
+        } else {
+            console.log(`Function ${functionName} not found!`); // Debugging
+        }
+    }
+});
+
+
+function disposeSprites(container, attributeName) {
+    // Get all child elements of the container
+    const children = Array.from(container.children);
+
+    // Loop through the children and remove content while preserving certain attributes
+    children.forEach(child => {
+        if (child.dataset[attributeName]) {
+            // Preserve the element with the dataset attribute (e.g., closeButton)
+            // You can clear only the content inside it while keeping the dataset attribute intact
+            child.innerHTML = ""; // Clear only the inner content
+        } else {
+            // Remove elements that don't have the dataset attribute
+            child.remove();
+        }
+    });
+}
+
 
 function moveItemToEmptySlot(fromSlot, toSlot) {
     if (!fromSlot || !toSlot || toSlot.itemID !== null) return;
@@ -787,6 +1025,8 @@ let parameters = {
     mp: 10,
     atk: 5,
     def: 5,
+    mag: 1,
+    spi: 1,
     luk: 3
 };
 
@@ -795,6 +1035,8 @@ let inventoryParams = {
     mp: 0,
     atk: 0,
     def: 0,
+    mag: 0,
+    spi: 0,
     luk: 0
 }
 
@@ -803,7 +1045,9 @@ let totalParams = {
     mp: { value: [parameters.mp + inventoryParams.mp, parameters.mp + inventoryParams.mp], iconIndex: 1 },
     atk: { value: parameters.atk + inventoryParams.atk, iconIndex: 2 },
     def: { value: parameters.def + inventoryParams.def, iconIndex: 3 },
-    luk: { value: parameters.luk + inventoryParams.luk, iconIndex: 7 }
+    mag: { value: parameters.mag + inventoryParams.mag, iconIndex: 4 },
+    spi: { value: parameters.spi + inventoryParams.spi, iconIndex: 5 },
+    luk: { value: parameters.luk + inventoryParams.luk, iconIndex: 6 }
 }
 
 
@@ -843,7 +1087,7 @@ function changePlayerStats(index, amount, paramID, mode) {
 
 
 const parametersContainer = document.querySelector(".parameters");
-const statOrder = ["hp", "mp", "atk", "def", "luk"];
+const statOrder = ["hp", "mp", "atk", "def", "mag", "spi", "luk"];
 function updateStats(param) {
     if (!totalParams[param]) return;
     let parameterElement = document.getElementById(param);

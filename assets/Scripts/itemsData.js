@@ -1,5 +1,42 @@
+export function items(id) {
+  const list = {
+    gold:  {
+      index: 1,
+      name: "Coins",
+      desc: "Use this for buying items.",
+      movement: "Manual",
+      coins: [0,999],
+      params: [],
+      effects: null,
+      rarity: 0,
+    },
+  };
+  const foundItem = Object.values(list).find(item => item.index === id) || null;
+  return foundItem;
+}
+
+
 export function lightArmors(id) {
   const list = {
+    bandana:  {
+      index: 1,
+      name: "Bandana",
+      movement: "Auto",
+      params: [
+        ["hp",[10,30],0],
+        ["def",[1,3],0],
+      ],
+      rarity: 0,
+    },
+    casualShirt:  {
+      index: 3,
+      name: "Casual Shirt",
+      movement: "Auto",
+      params: [
+        ["def",[3,5]]
+      ],
+      rarity: 0,
+    },
     copperRing:  {
       index: 5,
       name: "Copper Ring",
@@ -15,7 +52,7 @@ export function lightArmors(id) {
 export function heavyWeapons(id) {
   const list = {
     diamondBlade:  {
-      index: 1,
+      index: 12,
       name: "Diamond Blade",
       movement: "Manual",
       effects: null,
@@ -25,6 +62,9 @@ export function heavyWeapons(id) {
       index: 2,
       name: "Muramasa",
       movement: "Manual",
+      params: [
+        ["atk",[1,3]]
+      ],
       effects: null,
       rarity: 0,
     },

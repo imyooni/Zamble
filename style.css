@@ -262,11 +262,9 @@ html {
     image-rendering: pixelated;
 }
 
-
-
 .endTurnBorder {
     position: absolute;
-    transform: translateX(100%) translateY(-10%);
+    transform: translateX(130%) translateY(-10%);
     background-image: url('./assets/Sprites/system/endTurnBorder.png');
     color: #ffffff;
     width: 91px;
@@ -284,6 +282,7 @@ html {
         -1px -1px 0px black,
         1px -1px 0px black,
         -1px 1px 0px black;
+    image-rendering: pixelated;
 }
 
 .endTurnText {
@@ -322,7 +321,7 @@ html {
 
 .parameters {
     position: absolute;
-    transform: translateX(-8.9%) translateY(160%);
+    transform: translateX(-8.9%) translateY(125%);
     left: 10px; /* Adjust based on your layout */
     top: 40%;
     display: flex;
@@ -374,15 +373,15 @@ html {
 .tooltip {
     position: absolute;
     background-color: #2b2d42;
-    transform: translateX(37.3%) translateY(200%);
+    transform: translateX(-75px) translateY(-200%);
     width: 200px;
-    height: 100px; /* Adjust height dynamically based on content */
-    padding: 5px 10px;
+    height: 60px;
+    padding-left: 36px;
+    padding-top: 7px;
     border: 1px solid black;
-    border-radius: 10px 0px 0px 10px;
+    border-radius: 0px 10px 10px 0px;
     font-family: 'DefaultFont', sans-serif;
     font-size: 16px;
-    pointer-events: none;
     user-select: none;
     color: gold;
     text-shadow:
@@ -396,22 +395,95 @@ html {
     display: flex;   /* Enables flexbox */
     flex-direction: row;  /* Align items in a row */
     align-items: top; /* Align items vertically */
-    gap: 8px; /* Space between icon and text */
+    image-rendering: pixelated;
 }
 
 .tooltip.visible {
     opacity: 1;
 }
 
-.tooltip canvas {
-    width: 24px;
-    height: 24px;
-    display: block;
-}
+
+
+.tooltip-paramValue {
+    color: white;
+    width: 25px;
+    height: 16px;
+    background-color: #2b2d42;
+    border: 1px solid black;
+    border-radius: 2px;
+    font-family: 'DefaultFont', sans-serif;
+    font-size: 12px; 
+    display: flex;  
+    align-items: center;  /* Centers vertically */
+    justify-content: center; /* Centers horizontally */
+    text-align: center; /* Helps with multi-line text */
+  }
+  
 
 .tooltip-text {
     font-size: 14px;
     line-height: 24px; /* Ensures vertical alignment with the icon */
+}
+
+.tooltip-desc {
+    position: absolute;
+    top: 24%;
+    flex-direction: column;
+    justify-content: left;
+    align-items: left;
+    color: white;
+    font-size: 12px;
+    line-height: 24px; /* Ensures vertical alignment with the icon */
+}
+
+.tooltip-rarity {
+    position: absolute;
+    top: 40%;
+    flex-direction: column;
+    justify-content: left;
+    align-items: left;
+    color: white;
+    font-size: 14px;
+    line-height: 24px; /* Ensures vertical alignment with the icon */
+}
+
+
+.effects-tooltip {
+    position: absolute;
+    background-color: #2b2d42;
+    transform: translateX(-83px) translateY(-55%);
+    width: 200px;
+    height: 50px;
+    padding: 5px 10px;
+    border: 1px solid black;
+    border-radius: 0px 10px 10px 0px;
+    font-family: 'DefaultFont', sans-serif;
+    color: white;
+    font-size: 13px;
+    line-height: 13px; /* Ensures vertical alignment with the icon */
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    display: flex;   /* Enables flexbox */
+    flex-direction: row;  /* Align items in a row */
+    align-items: top; /* Align items vertically */
+    gap: 8px; /* Space between icon and text */
+}
+
+.effects-tooltip-text {
+    color: white;
+    font-size: 13px;
+    line-height: 13px; /* Ensures vertical alignment with the icon */
+}
+
+.effects-tooltip.visible {
+    opacity: 1;
 }
 
 
